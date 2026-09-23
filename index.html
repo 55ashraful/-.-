@@ -49,12 +49,16 @@
 
     <!-- প্রিমিয়াম হেডার বার -->
     <header class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white py-3.5 px-4 shadow-md sticky top-0 z-10 flex justify-between items-center border-b border-indigo-900">
-        <div class="flex items-center gap-2.5">
-            <button onclick="goHome()" class="text-indigo-200 hover:text-white text-lg font-bold px-1 transition">⬅️</button>
-            <h1 id="pageTitle" class="text-base font-bold truncate max-w-[170px] tracking-wide text-slate-100">স্থায়ী খাতা</h1>
-        </div>
         <div class="flex items-center gap-2">
-            <span id="headerTotalBadge" class="hidden bg-indigo-600 text-white text-xs px-2.5 py-1 rounded-full font-bold shadow-sm">মোট: ৳০</span>
+            <button onclick="goHome()" class="text-indigo-200 hover:text-white text-lg font-bold px-1 transition">⬅️</button>
+            <h1 id="pageTitle" class="text-base font-bold truncate max-w-[130px] tracking-wide text-slate-100">স্থায়ী খাতা</h1>
+        </div>
+        
+        <!-- নির্দেশিত স্থানে হিস্টোরি বাটন -->
+        <div class="flex items-center gap-2">
+            <button onclick="openHistory()" class="bg-indigo-800 hover:bg-indigo-700 text-indigo-100 text-xs px-2.5 py-1.5 rounded-full font-bold shadow border border-indigo-700 transition flex items-center gap-1">
+                📜 হিস্টোরি <span id="historyCountBadge" class="bg-rose-600 text-white px-1.5 py-0.5 rounded-full text-[10px]">০</span>
+            </button>
             <span id="saveStatus" class="text-[10px] text-emerald-400 font-bold"></span>
             <button onclick="goHome()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow transition">✓ সম্পন্ন</button>
         </div>
@@ -81,6 +85,21 @@
             </div>
         </div>
 
+        <!-- হিস্টোরি ভিউ: ডিলিট করা পাতাগুলোর তালিকা -->
+        <div id="historyView" class="hidden space-y-4">
+            <div class="flex justify-between items-center bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200">
+                <div>
+                    <h2 class="text-sm font-bold text-rose-600">🗑️ ডিলিট করা হিস্টোরি</h2>
+                    <p class="text-[11px] text-slate-400">ফিরে পান অথবা পাকাপাকি মুছুন</p>
+                </div>
+                <button onclick="goHome()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs px-3 py-2 rounded-xl font-bold transition">← খাতা ফিরে যান</button>
+            </div>
+
+            <div id="historyList" class="space-y-3">
+                <!-- ডিলিট করা কার্ডগুলো এখানে থাকবে -->
+            </div>
+        </div>
+
         <!-- এডিটর ভিউ: লেখার পাতা -->
         <div id="editorView" class="hidden flex-1 flex flex-col space-y-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
             <div class="flex justify-between items-center border-b border-slate-100 pb-2">
@@ -97,42 +116,55 @@
 
     <!-- Script -->
     <script>
-        const STORAGE_KEY_1 = 'my_permanent_hd_notes_v7';
-        const STORAGE_KEY_BACKUP = 'my_permanent_hd_notes_backup_v7';
+        const STORAGE_KEY_1 = 'my_permanent_hd_notes_v8';
+        const STORAGE_KEY_BACKUP = 'my_permanent_hd_notes_backup_v8';
+        const STORAGE_KEY_TRASH = 'my_permanent_hd_trash_v8';
 
-        let notes = loadPersistentNotes();
+        let notes = loadStorage(STORAGE_KEY_1, STORAGE_KEY_BACKUP) || [];
+        let trashNotes = loadStorage(STORAGE_KEY_TRASH, null) || [];
+        
         let currentNoteId = null;
         let saveTimeout = null;
 
         const homeView = document.getElementById('homeView');
+        const historyView = document.getElementById('historyView');
         const editorView = document.getElementById('editorView');
+        
         const notesListDiv = document.getElementById('notesList');
+        const historyListDiv = document.getElementById('historyList');
+        const historyCountBadge = document.getElementById('historyCountBadge');
+        
         const noteTitleInput = document.getElementById('noteTitleInput');
         const noteContentInput = document.getElementById('noteContentInput');
         const saveStatus = document.getElementById('saveStatus');
         const searchInput = document.getElementById('searchInput');
         const pageTotalBadge = document.getElementById('pageTotalBadge');
 
-        function loadPersistentNotes() {
+        function loadStorage(key1, key2) {
             try {
-                let data1 = localStorage.getItem(STORAGE_KEY_1);
-                let dataBackup = localStorage.getItem(STORAGE_KEY_BACKUP);
-                if (data1) return JSON.parse(data1);
-                else if (dataBackup) return JSON.parse(dataBackup);
+                let d1 = localStorage.getItem(key1);
+                let d2 = key2 ? localStorage.getItem(key2) : null;
+                if (d1) return JSON.parse(d1);
+                else if (d2) return JSON.parse(d2);
             } catch (e) {
-                console.error("ডেটা লোড করতে সমস্যা হয়েছে", e);
+                console.error("লোড করতে সমস্যা", e);
             }
-            return [];
+            return null;
         }
 
-        function savePersistentNotes() {
+        function saveAll() {
             try {
-                const jsonData = JSON.stringify(notes);
-                localStorage.setItem(STORAGE_KEY_1, jsonData);
-                localStorage.setItem(STORAGE_KEY_BACKUP, jsonData);
+                localStorage.setItem(STORAGE_KEY_1, JSON.stringify(notes));
+                localStorage.setItem(STORAGE_KEY_BACKUP, JSON.stringify(notes));
+                localStorage.setItem(STORAGE_KEY_TRASH, JSON.stringify(trashNotes));
             } catch (e) {
-                console.error("ডেটা সেভ করতে সমস্যা হয়েছে", e);
+                console.error("সেভ করতে সমস্যা", e);
             }
+            updateHistoryBadge();
+        }
+
+        function updateHistoryBadge() {
+            historyCountBadge.innerText = trashNotes.length;
         }
 
         function calculateTotal(content) {
@@ -150,7 +182,7 @@
                 date: new Date().toLocaleDateString('bn-BD')
             };
             notes.unshift(newNote);
-            savePersistentNotes();
+            saveAll();
             openEditor(newNote.id);
         }
 
@@ -172,19 +204,13 @@
                 card.onclick = () => openEditor(note.id);
 
                 let pressTimer;
-                card.addEventListener('touchstart', (e) => {
-                    // ৩ সেকেন্ড (৩০০০ মিলি সেকেন্ড) চেপে ধরে রাখতে হবে
+                card.addEventListener('touchstart', () => {
                     pressTimer = setTimeout(() => {
-                        triggerDelete(note.id, note.title);
+                        moveToTrash(note.id, note.title);
                     }, 3000);
                 });
-
-                card.addEventListener('touchend', () => { clearTimeout(pressTimer); });
-                card.addEventListener('touchmove', () => { clearTimeout(pressTimer); });
-
-                card.addEventListener('contextmenu', (e) => {
-                    e.preventDefault();
-                });
+                card.addEventListener('touchend', () => clearTimeout(pressTimer));
+                card.addEventListener('touchmove', () => clearTimeout(pressTimer));
 
                 card.innerHTML = `
                     <div class="absolute top-3.5 right-4 bg-indigo-50 text-indigo-700 text-xs font-bold px-2.5 py-1 rounded-full border border-indigo-100">
@@ -198,13 +224,73 @@
                 `;
                 notesListDiv.appendChild(card);
             });
+            updateHistoryBadge();
         }
 
-        function triggerDelete(id, title) {
-            if (confirm(`"${title}" পাতাটি পাকাপাকিভাবে মুছে ফেলতে চান?`)) {
-                notes = notes.filter(n => n.id !== id);
-                savePersistentNotes();
+        function moveToTrash(id, title) {
+            const noteIndex = notes.findIndex(n => n.id === id);
+            if (noteIndex > -1) {
+                const removedNote = notes.splice(noteIndex, 1)[0];
+                trashNotes.unshift(removedNote);
+                saveAll();
                 renderNotes();
+                alert(`"${title}" পাতাটি হিস্টোরিতে পাঠানো হয়েছে।`);
+            }
+        }
+
+        function openHistory() {
+            homeView.classList.add('hidden');
+            editorView.classList.add('hidden');
+            historyView.classList.remove('hidden');
+            document.getElementById('pageTitle').innerText = 'হিস্টোরি';
+            renderHistory();
+        }
+
+        function renderHistory() {
+            historyListDiv.innerHTML = '';
+            if (trashNotes.length === 0) {
+                historyListDiv.innerHTML = `<div class="bg-white p-8 rounded-2xl text-center text-xs text-slate-400 border border-slate-200 shadow-sm">হিস্টোরি একদম খালি।</div>`;
+                return;
+            }
+
+            trashNotes.forEach(note => {
+                let totalAmount = calculateTotal(note.content);
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-2xl shadow-sm border border-rose-100 relative";
+                
+                card.innerHTML = `
+                    <div class="absolute top-3.5 right-4 bg-rose-50 text-rose-700 text-xs font-bold px-2.5 py-1 rounded-full border border-rose-100">
+                        মোট: ৳${totalAmount}
+                    </div>
+                    <div class="space-y-1.5 overflow-hidden pr-20 mb-3">
+                        <h3 class="font-bold text-slate-900 text-base tracking-wide truncate">${note.title}</h3>
+                        <p class="text-sm text-slate-700 line-clamp-2 leading-relaxed font-bold">${note.content || 'খালি পাতা...'}</p>
+                        <span class="text-xs text-slate-400 font-bold block">${note.date}</span>
+                    </div>
+                    <div class="flex gap-2 pt-2 border-t border-slate-100">
+                        <button onclick="restoreNote(${note.id})" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs py-2 rounded-xl font-bold transition">🔄 ফিরিয়ে আনুন</button>
+                        <button onclick="permanentDelete(${note.id})" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white text-xs py-2 rounded-xl font-bold transition">🗑️ চিরতরে মুছুন</button>
+                    </div>
+                `;
+                historyListDiv.appendChild(card);
+            });
+        }
+
+        function restoreNote(id) {
+            const index = trashNotes.findIndex(n => n.id === id);
+            if (index > -1) {
+                const restored = trashNotes.splice(index, 1)[0];
+                notes.unshift(restored);
+                saveAll();
+                renderHistory();
+            }
+        }
+
+        function permanentDelete(id) {
+            if (confirm("এই হিসাবটি পাকাপাকিভাবে মুছে ফেলতে চান? এটি আর কখনোই ফিরিয়ে আনা যাবে না!")) {
+                trashNotes = trashNotes.filter(n => n.id !== id);
+                saveAll();
+                renderHistory();
             }
         }
 
@@ -214,6 +300,7 @@
             if (!note) return;
 
             homeView.classList.add('hidden');
+            historyView.classList.add('hidden');
             editorView.classList.remove('hidden');
 
             noteTitleInput.value = note.title;
@@ -226,7 +313,9 @@
         function goHome() {
             currentNoteId = null;
             editorView.classList.add('hidden');
+            historyView.classList.add('hidden');
             homeView.classList.remove('hidden');
+            document.getElementById('pageTitle').innerText = 'স্থায়ী খাতা';
             renderNotes();
         }
 
@@ -248,7 +337,7 @@
                     note.title = noteTitleInput.value.trim() || 'নামবিহীন পাতা';
                     note.content = currentText;
                     document.getElementById('pageTitle').innerText = note.title;
-                    savePersistentNotes();
+                    saveAll();
                     saveStatus.innerText = 'সেভ হয়েছে ✓';
                     setTimeout(() => { saveStatus.innerText = ''; }, 1500);
                 }
