@@ -206,7 +206,7 @@
                 let pressTimer;
                 card.addEventListener('touchstart', () => {
                     pressTimer = setTimeout(() => {
-                        triggerDeleteConfirm(note.id, note.title);
+                        moveToTrashDirect(note.id, note.title);
                     }, 3000);
                 });
                 card.addEventListener('touchend', () => clearTimeout(pressTimer));
@@ -227,16 +227,14 @@
             updateHistoryBadge();
         }
 
-        function triggerDeleteConfirm(id, title) {
-            if (confirm(`"${title}" পাতাটি ডিলিট করতে চান?`)) {
-                const noteIndex = notes.findIndex(n => n.id === id);
-                if (noteIndex > -1) {
-                    const removedNote = notes.splice(noteIndex, 1)[0];
-                    trashNotes.unshift(removedNote);
-                    saveAll();
-                    renderNotes();
-                    alert(`"${title}" সফলভাবে ডিলিট করা হয়েছে।`);
-                }
+        function moveToTrashDirect(id, title) {
+            const noteIndex = notes.findIndex(n => n.id === id);
+            if (noteIndex > -1) {
+                const removedNote = notes.splice(noteIndex, 1)[0];
+                trashNotes.unshift(removedNote);
+                saveAll();
+                renderNotes();
+                alert(`"${title}" সফলভাবে ডিলিট করা হয়েছে।`);
             }
         }
 
