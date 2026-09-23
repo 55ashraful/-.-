@@ -2,14 +2,16 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>আমার স্থায়ী ডিজিটাল খাতা</title>
     
     <!-- PWA Manifest ও থিম কালার -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
-    <link rel="apple-touch-icon" href="icon.png">
-
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/QF28WdP3/1000110395.png">
+    
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@500;600;700&display=swap" rel="stylesheet">
@@ -95,7 +97,6 @@
 
     <!-- Script -->
     <script>
-        // অফলাইন ও পার্মানেন্ট স্টোরেজ কি
         const STORAGE_KEY_1 = 'my_permanent_hd_notes_v7';
         const STORAGE_KEY_BACKUP = 'my_permanent_hd_notes_backup_v7';
 
@@ -256,7 +257,6 @@
 
         renderNotes();
 
-        // সার্ভিস ওয়ার্কার রেজিস্ট্রেশন (অফলাইন ব্যবহারের জন্য)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
