@@ -27,10 +27,10 @@
             border: none;
             outline: none;
             resize: none;
-            font-size: 20px;
-            line-height: 1.4; 
+            font-size: 22px;
+            line-height: 1.5; 
             color: #000000 !important;
-            font-weight: 600;
+            font-weight: 700;
             letter-spacing: 0.5px;
             -webkit-font-smoothing: antialiased;
             white-space: pre-wrap; 
@@ -51,12 +51,12 @@
     <header class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white py-3.5 px-4 shadow-md sticky top-0 z-10 flex justify-between items-center border-b border-indigo-900">
         <div class="flex items-center gap-2.5">
             <button onclick="goHome()" class="text-indigo-200 hover:text-white text-lg font-bold px-1 transition">⬅️</button>
-            <h1 id="pageTitle" class="text-base font-bold truncate max-w-[170px] tracking-wide text-slate-100">স্থায়ী খাতা</h1>
+            <h1 id="pageTitle" class="text-lg font-bold truncate max-w-[170px] tracking-wide text-slate-100">স্থায়ী খাতা</h1>
         </div>
         <div class="flex items-center gap-2">
             <span id="headerTotalBadge" class="hidden bg-indigo-600 text-white text-xs px-2.5 py-1 rounded-full font-bold shadow-sm">মোট: ৳০</span>
-            <span id="saveStatus" class="text-[10px] text-emerald-400 font-bold"></span>
-            <button onclick="goHome()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow transition">✓ সম্পন্ন</button>
+            <span id="saveStatus" class="text-[11px] text-emerald-400 font-bold"></span>
+            <button onclick="goHome()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-3.5 py-1.5 rounded-full font-bold shadow transition">✓ সম্পন্ন</button>
         </div>
     </header>
 
@@ -64,7 +64,7 @@
 
         <!-- হোম ভিউ: নোট লিস্ট -->
         <div id="homeView" class="space-y-4">
-            <div class="flex justify-between items-center bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
                 <div>
                     <h2 class="text-sm font-bold text-slate-800">📖 আপনার খাতার পাতাগুলো</h2>
                     <p class="text-[11px] text-slate-400">অফলাইন ও আজীবন স্থায়ী সেভ</p>
@@ -73,7 +73,7 @@
             </div>
 
             <div class="bg-white p-2.5 rounded-2xl shadow-sm border border-slate-200">
-                <input type="text" id="searchInput" onkeyup="renderNotes()" class="w-full px-3 py-2 text-sm bg-slate-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800" placeholder="🔍 হিসাব খুঁজুন...">
+                <input type="text" id="searchInput" onkeyup="renderNotes()" class="w-full px-3 py-2.5 text-sm bg-slate-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 font-bold" placeholder="🔍 হিসাব খুঁজুন...">
             </div>
 
             <div id="notesList" class="space-y-3">
@@ -83,9 +83,9 @@
 
         <!-- এডিটর ভিউ: লেখার পাতা -->
         <div id="editorView" class="hidden flex-1 flex flex-col space-y-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
-            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                <input type="text" id="noteTitleInput" oninput="autoSave()" placeholder="নাম লিখুন (যেমন: রহিম)" class="w-2/3 text-base font-bold text-slate-900 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition">
-                <div id="pageTotalBadge" class="bg-indigo-50 text-indigo-700 text-xs font-bold px-3 py-1.5 rounded-full border border-indigo-100 shadow-sm">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                <input type="text" id="noteTitleInput" oninput="autoSave()" placeholder="নাম লিখুন (যেমন: রহিম)" class="w-2/3 text-base font-bold text-slate-900 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition">
+                <div id="pageTotalBadge" class="bg-indigo-50 text-indigo-700 text-sm font-extrabold px-3.5 py-1.5 rounded-full border border-indigo-100 shadow-sm">
                     মোট: ৳০
                 </div>
             </div>
@@ -160,14 +160,14 @@
             const filtered = notes.filter(n => n.title.toLowerCase().includes(searchText) || n.content.toLowerCase().includes(searchText));
 
             if (filtered.length === 0) {
-                notesListDiv.innerHTML = `<div class="bg-white p-8 rounded-2xl text-center text-xs text-slate-400 border border-slate-200 shadow-sm">কোনো পাতা নেই। নতুন পাতা খুলে লেখা শুরু করুন।</div>`;
+                notesListDiv.innerHTML = `<div class="bg-white p-8 rounded-2xl text-center text-xs text-slate-400 border border-slate-200 shadow-sm">কোনো পাতা নেই। নতুন পাতা খুলে লেখাগুলো সাজিয়ে রাখুন।</div>`;
                 return;
             }
 
             filtered.forEach(note => {
                 let totalAmount = calculateTotal(note.content);
                 const card = document.createElement('div');
-                card.className = "note-card bg-white p-4 rounded-2xl shadow-sm border border-slate-200 cursor-pointer relative select-none";
+                card.className = "note-card bg-white p-4.5 rounded-2xl shadow-sm border border-slate-200 cursor-pointer relative select-none";
                 
                 card.onclick = () => openEditor(note.id);
 
@@ -187,13 +187,13 @@
                 });
 
                 card.innerHTML = `
-                    <div class="absolute top-3.5 right-4 bg-indigo-50 text-indigo-700 text-xs font-bold px-2.5 py-1 rounded-full border border-indigo-100">
+                    <div class="absolute top-4 right-4 bg-indigo-50 text-indigo-800 text-sm font-extrabold px-3 py-1 rounded-full border border-indigo-200 shadow-sm">
                         মোট: ৳${totalAmount}
                     </div>
-                    <div class="space-y-1.5 overflow-hidden pr-20">
-                        <h3 class="font-bold text-slate-800 text-sm truncate">${note.title}</h3>
-                        <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed font-medium">${note.content || 'খালি পাতা...'}</p>
-                        <span class="text-[10px] text-slate-400 font-semibold block pt-1">${note.date}</span>
+                    <div class="space-y-2 overflow-hidden pr-24">
+                        <h3 class="font-bold text-slate-900 text-base tracking-wide truncate">${note.title}</h3>
+                        <p class="text-sm text-slate-800 line-clamp-2 leading-relaxed font-bold">${note.content || 'খালি পাতা...'}</p>
+                        <span class="text-xs text-slate-500 font-bold block pt-1">${note.date}</span>
                     </div>
                 `;
                 notesListDiv.appendChild(card);
