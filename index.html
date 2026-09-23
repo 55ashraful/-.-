@@ -54,7 +54,7 @@
             <h1 id="pageTitle" class="text-base font-bold truncate max-w-[130px] tracking-wide text-slate-100">স্থায়ী খাতা</h1>
         </div>
         
-        <!-- নির্দেশিত স্থানে হিস্টোরি বাটন -->
+        <!-- হিস্টোরি বাটন -->
         <div class="flex items-center gap-2">
             <button onclick="openHistory()" class="bg-indigo-800 hover:bg-indigo-700 text-indigo-100 text-xs px-2.5 py-1.5 rounded-full font-bold shadow border border-indigo-700 transition flex items-center gap-1">
                 📜 হিস্টোরি <span id="historyCountBadge" class="bg-rose-600 text-white px-1.5 py-0.5 rounded-full text-[10px]">০</span>
@@ -206,7 +206,7 @@
                 let pressTimer;
                 card.addEventListener('touchstart', () => {
                     pressTimer = setTimeout(() => {
-                        moveToTrash(note.id, note.title);
+                        triggerDeleteConfirm(note.id, note.title);
                     }, 3000);
                 });
                 card.addEventListener('touchend', () => clearTimeout(pressTimer));
@@ -227,14 +227,16 @@
             updateHistoryBadge();
         }
 
-        function moveToTrash(id, title) {
-            const noteIndex = notes.findIndex(n => n.id === id);
-            if (noteIndex > -1) {
-                const removedNote = notes.splice(noteIndex, 1)[0];
-                trashNotes.unshift(removedNote);
-                saveAll();
-                renderNotes();
-                alert(`"${title}" পাতাটি হিস্টোরিতে পাঠানো হয়েছে।`);
+        function triggerDeleteConfirm(id, title) {
+            if (confirm(`"${title}" পাতাটি ডিলিট করতে চান?`)) {
+                const noteIndex = notes.findIndex(n => n.id === id);
+                if (noteIndex > -1) {
+                    const removedNote = notes.splice(noteIndex, 1)[0];
+                    trashNotes.unshift(removedNote);
+                    saveAll();
+                    renderNotes();
+                    alert(`"${title}" পাতাটি হিস্টোরিতে পাঠানো হয়েছে।`);
+                }
             }
         }
 
