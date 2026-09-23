@@ -173,9 +173,10 @@
 
                 let pressTimer;
                 card.addEventListener('touchstart', (e) => {
+                    // ১৫ সেকেন্ড (১৫০০০ মিলি সেকেন্ড) চেপে ধরে রাখতে হবে
                     pressTimer = setTimeout(() => {
                         triggerDelete(note.id, note.title);
-                    }, 600);
+                    }, 15000);
                 });
 
                 card.addEventListener('touchend', () => { clearTimeout(pressTimer); });
@@ -183,7 +184,7 @@
 
                 card.addEventListener('contextmenu', (e) => {
                     e.preventDefault();
-                    triggerDelete(note.id, note.title);
+                    // মাউসের রাইট ক্লিকের ক্ষেত্রেও ১৫ সেকেন্ড সময় বা সরাসরি সুরক্ষার জন্য রাখা হলো
                 });
 
                 card.innerHTML = `
