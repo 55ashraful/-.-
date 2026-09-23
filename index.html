@@ -173,10 +173,10 @@
 
                 let pressTimer;
                 card.addEventListener('touchstart', (e) => {
-                    // ৭ সেকেন্ড (৭০০০ মিলি সেকেন্ড) চেপে ধরে রাখতে হবে
+                    // ৫ সেকেন্ড (৫০০০ মিলি সেকেন্ড) চেপে ধরে রাখতে হবে
                     pressTimer = setTimeout(() => {
                         triggerDelete(note.id, note.title);
-                    }, 7000);
+                    }, 5000);
                 });
 
                 card.addEventListener('touchend', () => { clearTimeout(pressTimer); });
