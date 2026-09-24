@@ -25,7 +25,6 @@
             padding-bottom: 50px;
             user-select: none;
         }
-        /* হেডার */
         header {
             background: linear-gradient(to right, #0f172a, #1e1b4b);
             color: white;
@@ -101,7 +100,6 @@
             font-weight: bold;
         }
 
-        /* মূল কন্টেইনার */
         main {
             max-width: 440px;
             width: 100%;
@@ -112,7 +110,6 @@
             gap: 16px;
         }
 
-        /* কার্ড এবং বক্স ডিজাইন */
         .card {
             background-color: white;
             padding: 16px;
@@ -148,11 +145,7 @@
             font-weight: 600;
             color: #1e293b;
         }
-        .search-box input:focus {
-            border-color: #4f46e5;
-        }
 
-        /* নোট কার্ড */
         .note-card {
             background-color: white;
             padding: 16px;
@@ -163,9 +156,6 @@
             position: relative;
             margin-bottom: 12px;
             transition: transform 0.2s;
-        }
-        .note-card:hover {
-            transform: translateY(-2px);
         }
         .amount-tag {
             position: absolute;
@@ -206,7 +196,6 @@
             font-weight: bold;
         }
 
-        /* এডিটর পেজ */
         #editorView {
             background-color: white;
             padding: 16px;
@@ -258,7 +247,6 @@
             white-space: pre-wrap;
         }
 
-        /* হিস্টোরি পেজ বাটন */
         .history-card-btns {
             display: flex;
             gap: 8px;
@@ -309,7 +297,6 @@
     </header>
 
     <main>
-        <!-- হোম ভিউ -->
         <div id="homeView">
             <div class="card flex-row-box" style="margin-bottom: 12px;">
                 <div>
@@ -326,7 +313,6 @@
             <div id="notesList"></div>
         </div>
 
-        <!-- হিস্টোরি ভিউ -->
         <div id="historyView" class="hidden">
             <div class="card flex-row-box" style="margin-bottom: 12px; border-color: #fca5a5;">
                 <div>
@@ -339,7 +325,6 @@
             <div id="historyList"></div>
         </div>
 
-        <!-- এডিটর ভিউ -->
         <div id="editorView" class="hidden">
             <div class="editor-header">
                 <input type="text" id="noteTitleInput" oninput="autoSave()" placeholder="নাম লিখুন...">
@@ -350,9 +335,9 @@
     </main>
 
     <script>
-        const STORAGE_KEY_1 = 'my_permanent_hd_notes_v9';
-        const STORAGE_KEY_BACKUP = 'my_permanent_hd_notes_backup_v9';
-        const STORAGE_KEY_TRASH = 'my_permanent_hd_trash_v9';
+        const STORAGE_KEY_1 = 'my_permanent_hd_notes_v10';
+        const STORAGE_KEY_BACKUP = 'my_permanent_hd_notes_backup_v10';
+        const STORAGE_KEY_TRASH = 'my_permanent_hd_trash_v10';
 
         let notes = loadStorage(STORAGE_KEY_1, STORAGE_KEY_BACKUP) || [];
         let trashNotes = loadStorage(STORAGE_KEY_TRASH, null) || [];
@@ -435,16 +420,39 @@
                 const card = document.createElement('div');
                 card.className = "note-card";
                 
-                card.onclick = () => openEditor(note.id);
-
+                let isLongPress = false;
                 let pressTimer;
-                card.addEventListener('touchstart', () => {
+
+                // সাধারণ ক্লিক বা ট্যাপ করলে এডিটর ওপেন হবে
+                card.onclick = () => {
+                    if (!isLongPress) {
+                        openEditor(note.id);
+                    }
+                };
+
+                // ট্যচ শুরু হলে ৩ সেকেন্ডের টাইমার চালু হবে
+                const startPress = (e) => {
+                    isLongPress = false;
+                    clearTimeout(pressTimer);
                     pressTimer = setTimeout(() => {
+                        isLongPress = true;
                         moveToTrashDirect(note.id, note.title);
-                    }, 3000);
-                });
-                card.addEventListener('touchend', () => clearTimeout(pressTimer));
-                card.addEventListener('touchmove', () => clearTimeout(pressTimer));
+                    }, 3000); // ঠিক ৩ সেকেন্ড
+                };
+
+                // আঙুল তুলে নিলে বা সরে গেলে টাইমার বাতিল হবে
+                const cancelPress = () => {
+                    clearTimeout(pressTimer);
+                };
+
+                card.addEventListener('touchstart', startPress, {passive: true});
+                card.addEventListener('touchend', cancelPress);
+                card.addEventListener('touchmove', cancelPress);
+
+                // মাউসের জন্যও একই ব্যবস্থা (কম্পিউটার বা টেস্টের সুবিধার জন্য)
+                card.addEventListener('mousedown', startPress);
+                card.addEventListener('mouseup', cancelPress);
+                card.addEventListener('mouseleave', cancelPress);
 
                 card.innerHTML = `
                     <div class="amount-tag">মোট: ৳${totalAmount}</div>
