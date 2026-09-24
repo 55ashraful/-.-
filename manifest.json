@@ -1,16 +1,45 @@
 {
-  "name": "স্থায়ী ডিজিটাল খাতা",
+  "name": "স্থায়ী ডিজিটাল খাতা",
   "short_name": "ডিজিটাল খাতা",
+  "description": "দোকানের হিসাব রাখার স্থায়ী ডিজিটাল খাতা",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "icons": [
     {
-      "src": "https://i.ibb.co/0RCv1GJK/1000110395.png",
-      "sizes": "192x192",
+      "src": "./icon-512.png",
+      "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "নতুন হিসাবের পাতা",
+      "short_name": "নতুন পাতা",
+      "description": "সরাসরি নতুন হিসাব লেখা শুরু করুন",
+      "url": "./index.html?action=new",
+      "icons": [
+        { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png" }
+      ]
+    },
+    {
+      "name": "ডিলিট করা হিস্টোরি",
+      "short_name": "হিস্টোরি",
+      "description": "ডিলিট করা হিসাবগুলো দেখুন",
+      "url": "./index.html?action=history",
+      "icons": [
+        { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png" }
+      ]
     }
   ]
 }
