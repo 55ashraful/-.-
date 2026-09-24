@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>আমার স্থায়ী ডিজিটাল খাতা</title>
-    
-    <link rel="manifest" href="manifest.json">
+    <title>আমার স্থায়ী ডিজিটাল খাতা</title>
+
+    <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://i.ibb.co/0RCv1GJK/1000110395.png">
-    
+    <link rel="apple-touch-icon" href="./icon-512.png">
+
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -54,7 +54,7 @@
         .header-left h1 {
             font-size: 16px;
             font-weight: bold;
-            max-width: 130px;
+            max-width: 120px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -62,35 +62,39 @@
         .header-right {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
-        .history-btn {
+        .history-btn, .logout-btn {
             background-color: #312e81;
             color: #e0e7ff;
             border: 1px solid #4338ca;
-            padding: 6px 10px;
+            padding: 5px 8px;
             border-radius: 9999px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
+        }
+        .logout-btn {
+            background-color: #7f1d1d;
+            border-color: #991b1b;
         }
         .badge-count {
             background-color: #e11d48;
             color: white;
-            padding: 1px 6px;
+            padding: 1px 5px;
             border-radius: 9999px;
-            font-size: 10px;
+            font-size: 9px;
         }
         .done-btn {
             background-color: #4f46e5;
             color: white;
             border: none;
-            padding: 6px 12px;
+            padding: 6px 10px;
             border-radius: 9999px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             cursor: pointer;
         }
@@ -247,6 +251,34 @@
             white-space: pre-wrap;
         }
 
+        #loginView {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            text-align: center;
+            gap: 20px;
+        }
+        .google-login-btn {
+            background-color: white;
+            color: #1e293b;
+            border: 2px solid #cbd5e1;
+            padding: 12px 24px;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        .google-login-btn:hover {
+            background-color: #f8fafc;
+            border-color: #4f46e5;
+        }
+
         .history-card-btns {
             display: flex;
             gap: 8px;
@@ -279,103 +311,252 @@
         .hidden { display: none !important; }
         .text-center { text-align: center; color: #94a3b8; font-size: 13px; padding: 24px; }
     </style>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker Registered!'))
+                    .catch(err => console.log('Service Worker Failed!', err));
+            });
+        }
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCQIMrolJFKQqJ-iX_c-0nMas_6rszWFD0",
+            authDomain: "digital-khata-126be.firebaseapp.com",
+            projectId: "digital-khata-126be",
+            storageBucket: "digital-khata-126be.firebasestorage.app",
+            messagingSenderId: "42333578545",
+            appId: "1:42333578545:web:144f110b9a2fcef9033c10",
+            measurementId: "G-0WYCE8G4R1"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        // লোকাল ও ক্লাউড ডাটা একত্র (মার্জ) করার ফাংশন
+        function mergeLists(localList, cloudList) {
+            const map = new Map();
+            const add = (item) => {
+                if (!item || item.id === undefined) return;
+                const key = String(item.id);
+                const existing = map.get(key);
+                if (!existing) {
+                    map.set(key, item);
+                } else {
+                    const tNew = item.updatedAt || 0;
+                    const tOld = existing.updatedAt || 0;
+                    map.set(key, (tNew >= tOld) ? item : existing);
+                }
+            };
+            (cloudList || []).forEach(add);
+            (localList || []).forEach(add);
+            return Array.from(map.values()).sort((a, b) => (b.updatedAt || b.id) - (a.updatedAt || a.id));
+        }
+
+        window.loginWithGoogle = function() {
+            signInWithPopup(auth, provider).catch((error) => {
+                console.error("লগইন ত্রুটি:", error);
+                if (!navigator.onLine || error.code === 'auth/internal-error' || error.code === 'auth/network-request-failed') {
+                    alert("এই অ্যাপ ব্যবহার করতে হলে প্রথমবার ইন্টারনেট কানেক্ট করে Google দিয়ে রেজিস্ট্রেশন করতে হবে।");
+                } else {
+                    alert("লগইন করতে সমস্যা হয়েছে: " + error.message);
+                }
+            });
+        };
+
+        window.logoutApp = function() {
+            if (confirm("আপনি কি একাউন্ট থেকে বের হতে চান?")) {
+                signOut(auth).then(() => {
+                    localStorage.clear();
+                    location.reload();
+                });
+            }
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            const loginView = document.getElementById('loginView');
+            const mainAppView = document.getElementById('mainAppView');
+            const userEmailSpan = document.getElementById('userEmailSpan');
+
+            if (user) {
+                loginView.classList.add('hidden');
+                mainAppView.classList.remove('hidden');
+                userEmailSpan.innerText = user.email;
+
+                // ইন্টারনেট থাকলে ক্লাউড ডাটা আনবো, রিপ্লেস না করে মার্জ করবো
+                if (navigator.onLine) {
+                    try {
+                        const docRef = doc(db, "users_khata", user.uid);
+                        const docSnap = await getDoc(docRef);
+
+                        let cloudNotes = [];
+                        let cloudTrash = [];
+                        if (docSnap.exists()) {
+                            cloudNotes = docSnap.data().notes || [];
+                            cloudTrash = docSnap.data().trashNotes || [];
+                        }
+
+                        notes = mergeLists(notes, cloudNotes);
+                        trashNotes = mergeLists(trashNotes, cloudTrash);
+
+                        localStorage.setItem(STORAGE_KEY_1, JSON.stringify(notes));
+                        localStorage.setItem(STORAGE_KEY_TRASH, JSON.stringify(trashNotes));
+
+                        await window.syncToCloud();
+                    } catch (e) {
+                        console.log("ক্লাউড থেকে ডাটা আনতে সমস্যা:", e);
+                    }
+                }
+                renderNotes();
+
+                // ✅ নতুন: হোম স্ক্রিন শর্টকাটের অ্যাকশন হ্যান্ডেল
+                const urlParams = new URLSearchParams(window.location.search);
+                const shortcutAction = urlParams.get('action');
+                if (shortcutAction) {
+                    window.history.replaceState(null, '', './index.html');
+                    setTimeout(() => {
+                        if (shortcutAction === 'new' && typeof createNewNote === 'function') {
+                            createNewNote();
+                        } else if (shortcutAction === 'history' && typeof openHistory === 'function') {
+                            openHistory();
+                        }
+                    }, 800);
+                }
+            } else {
+                mainAppView.classList.add('hidden');
+                loginView.classList.remove('hidden');
+            }
+        });
+
+        window.syncToCloud = async function() {
+            const user = auth.currentUser;
+            if (user && navigator.onLine) {
+                try {
+                    await setDoc(doc(db, "users_khata", user.uid), {
+                        notes: notes,
+                        trashNotes: trashNotes,
+                        updatedAt: new Date().toISOString()
+                    }, { merge: true });
+                } catch (e) {
+                    console.error("ক্লাউড সিংক ব্যর্থ:", e);
+                }
+            }
+        };
+
+        // ইন্টারনেট ফিরে এলেই রিলোড ছাড়াই অটো সিংক
+        window.addEventListener('online', () => {
+            setTimeout(() => { window.syncToCloud(); }, 3000);
+        });
+    </script>
 </head>
 <body>
 
-    <header>
-        <div class="header-left">
-            <button onclick="goHome()">⬅️</button>
-            <h1 id="pageTitle">স্থায়ী খাতা</h1>
-        </div>
-        <div class="header-right">
-            <button onclick="openHistory()" class="history-btn">
-                📜 হিস্টোরি <span id="historyCountBadge" class="badge-count">০</span>
+    <div id="loginView" class="hidden">
+        <div class="card" style="max-width: 350px; width: 90%; padding: 30px;">
+            <h2 style="font-size: 20px; font-weight: bold; color: #0f172a; margin-bottom: 8px;">📖 স্থায়ী ডিজিটাল খাতা</h2>
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 24px;">দোকানের হিসাব নিরাপদ রাখতে আপনার জিমেইল দিয়ে প্রবেশ করুন। ফোন নষ্ট হলেও হিসাব হারাবে না!</p>
+            <button onclick="loginWithGoogle()" class="google-login-btn" style="width: 100%; justify-content: center;">
+                <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.4l3.7 2.9C6.5 7.3 9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/><path fill="#FBBC05" d="M5.6 14.7c-.2-.7-.4-1.5-.4-2.7s.2-2 .4-2.7L1.9 6.4C.7 8.8 0 10.3 0 12s.7 3.2 1.9 5.6l3.7-2.9z"/><path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 15C3.7 18.8 7.5 23 12 23z"/></svg>
+                জিমেইল দিয়ে লগইন করুন
             </button>
-            <span id="saveStatus"></span>
-            <button onclick="goHome()" class="done-btn">✓ সম্পন্ন</button>
         </div>
-    </header>
+    </div>
 
-    <main>
-        <div id="homeView">
-            <div class="card flex-row-box" style="margin-bottom: 12px;">
-                <div>
-                    <h2 style="font-size: 14px; font-weight: bold; color: #1e293b;">📖 আপনার খাতার পাতাগুলো</h2>
-                    <p style="font-size: 11px; color: #64748b;">অফলাইন ও আজীবন স্থায়ী সেভ</p>
+    <div id="mainAppView" class="hidden">
+        <header>
+            <div class="header-left">
+                <button onclick="goHome()">⬅️</button>
+                <h1 id="pageTitle">স্থায়ী খাতা</h1>
+            </div>
+            <div class="header-right">
+                <button onclick="openHistory()" class="history-btn">
+                    📜 <span id="historyCountBadge" class="badge-count">০</span>
+                </button>
+                <button onclick="logoutApp()" class="logout-btn" title="লগআউট">🚪</button>
+                <span id="saveStatus"></span>
+                <button onclick="goHome()" class="done-btn">✓ সম্পন্ন</button>
+            </div>
+        </header>
+
+        <main>
+            <div id="homeView">
+                <div class="card flex-row-box" style="margin-bottom: 12px;">
+                    <div>
+                        <h2 style="font-size: 13px; font-weight: bold; color: #1e293b;" id="userEmailSpan"></h2>
+                        <p style="font-size: 11px; color: #059669; font-weight: bold;">✓ ক্লাউড ব্যাকআপ সচল</p>
+                    </div>
+                    <button onclick="createNewNote()" class="primary-btn">➕ নতুন পাতা</button>
                 </div>
-                <button onclick="createNewNote()" class="primary-btn">➕ নতুন পাতা</button>
-            </div>
 
-            <div class="card search-box" style="padding: 10px; margin-bottom: 12px;">
-                <input type="text" id="searchInput" onkeyup="renderNotes()" placeholder="🔍 হিসাব খুঁজুন...">
-            </div>
-
-            <div id="notesList"></div>
-        </div>
-
-        <div id="historyView" class="hidden">
-            <div class="card flex-row-box" style="margin-bottom: 12px; border-color: #fca5a5;">
-                <div>
-                    <h2 style="font-size: 14px; font-weight: bold; color: #e11d48;">🗑️ ডিলিট করা হিস্টোরি</h2>
-                    <p style="font-size: 11px; color: #64748b;">ফিরে পান অথবা পাকাপাকি মুছুন</p>
+                <div class="card search-box" style="padding: 10px; margin-bottom: 12px;">
+                    <input type="text" id="searchInput" onkeyup="renderNotes()" placeholder="🔍 হিসাব খুঁজুন...">
                 </div>
-                <button onclick="goHome()" style="background-color: #e2e8f0; color: #334155; border: none; padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer;">← খাতা ফিরে যান</button>
+
+                <div id="notesList"></div>
             </div>
 
-            <div id="historyList"></div>
-        </div>
+            <div id="historyView" class="hidden">
+                <div class="card flex-row-box" style="margin-bottom: 12px; border-color: #fca5a5;">
+                    <div>
+                        <h2 style="font-size: 14px; font-weight: bold; color: #e11d48;">🗑️ ডিলিট করা হিস্টোরি</h2>
+                        <p style="font-size: 11px; color: #64748b;">ফিরে পান অথবা পাকাপাকি মুছুন</p>
+                    </div>
+                    <button onclick="goHome()" style="background-color: #e2e8f0; color: #334155; border: none; padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer;">← খাতা ফিরে যান</button>
+                </div>
 
-        <div id="editorView" class="hidden">
-            <div class="editor-header">
-                <input type="text" id="noteTitleInput" oninput="autoSave()" placeholder="নাম লিখুন...">
-                <div id="pageTotalBadge">মোট: ৳০</div>
+                <div id="historyList"></div>
             </div>
-            <textarea id="noteContentInput" oninput="autoSave()" placeholder="এখানে পাশাপাশি বা ইচ্ছামমতো লিখুন..." class="note-page"></textarea>
-        </div>
-    </main>
+
+            <div id="editorView" class="hidden">
+                <div class="editor-header">
+                    <input type="text" id="noteTitleInput" oninput="autoSave()" placeholder="নাম লিখুন...">
+                    <div id="pageTotalBadge">মোট: ৳০</div>
+                </div>
+                <textarea id="noteContentInput" oninput="autoSave()" placeholder="এখানে পাশাপাশি বা ইচ্ছামমতো লিখুন..." class="note-page"></textarea>
+            </div>
+        </main>
+    </div>
 
     <script>
-        const STORAGE_KEY_1 = 'my_permanent_hd_notes_v10';
-        const STORAGE_KEY_BACKUP = 'my_permanent_hd_notes_backup_v10';
-        const STORAGE_KEY_TRASH = 'my_permanent_hd_trash_v10';
+        const STORAGE_KEY_1 = 'my_permanent_hd_notes_v11';
+        const STORAGE_KEY_TRASH = 'my_permanent_hd_trash_v11';
 
-        let notes = loadStorage(STORAGE_KEY_1, STORAGE_KEY_BACKUP) || [];
-        let trashNotes = loadStorage(STORAGE_KEY_TRASH, null) || [];
-        
+        let notes = JSON.parse(localStorage.getItem(STORAGE_KEY_1)) || [];
+        let trashNotes = JSON.parse(localStorage.getItem(STORAGE_KEY_TRASH)) || [];
+
         let currentNoteId = null;
         let saveTimeout = null;
 
         const homeView = document.getElementById('homeView');
         const historyView = document.getElementById('historyView');
         const editorView = document.getElementById('editorView');
-        
+
         const notesListDiv = document.getElementById('notesList');
         const historyListDiv = document.getElementById('historyList');
         const historyCountBadge = document.getElementById('historyCountBadge');
-        
+
         const noteTitleInput = document.getElementById('noteTitleInput');
         const noteContentInput = document.getElementById('noteContentInput');
         const saveStatus = document.getElementById('saveStatus');
         const searchInput = document.getElementById('searchInput');
         const pageTotalBadge = document.getElementById('pageTotalBadge');
 
-        function loadStorage(key1, key2) {
-            try {
-                let d1 = localStorage.getItem(key1);
-                let d2 = key2 ? localStorage.getItem(key2) : null;
-                if (d1) return JSON.parse(d1);
-                else if (d2) return JSON.parse(d2);
-            } catch (e) {
-                console.error("লোড করতে সমস্যা", e);
-            }
-            return null;
-        }
-
         function saveAll() {
             try {
                 localStorage.setItem(STORAGE_KEY_1, JSON.stringify(notes));
-                localStorage.setItem(STORAGE_KEY_BACKUP, JSON.stringify(notes));
                 localStorage.setItem(STORAGE_KEY_TRASH, JSON.stringify(trashNotes));
+                if (typeof window.syncToCloud === 'function') {
+                    window.syncToCloud();
+                }
             } catch (e) {
                 console.error("সেভ করতে সমস্যা", e);
             }
@@ -398,7 +579,8 @@
                 id: Date.now(),
                 title: 'নতুন হিসাবের পাতা',
                 content: '',
-                date: new Date().toLocaleDateString('bn-BD')
+                date: new Date().toLocaleDateString('bn-BD'),
+                updatedAt: Date.now()
             };
             notes.unshift(newNote);
             saveAll();
@@ -419,28 +601,25 @@
                 let totalAmount = calculateTotal(note.content);
                 const card = document.createElement('div');
                 card.className = "note-card";
-                
+
                 let isLongPress = false;
                 let pressTimer;
 
-                // সাধারণ ক্লিক বা ট্যাপ করলে এডিটর ওপেন হবে
                 card.onclick = () => {
                     if (!isLongPress) {
                         openEditor(note.id);
                     }
                 };
 
-                // ট্যচ শুরু হলে ৩ সেকেন্ডের টাইমার চালু হবে
                 const startPress = (e) => {
                     isLongPress = false;
                     clearTimeout(pressTimer);
                     pressTimer = setTimeout(() => {
                         isLongPress = true;
                         moveToTrashDirect(note.id, note.title);
-                    }, 3000); // ঠিক ৩ সেকেন্ড
+                    }, 3000);
                 };
 
-                // আঙুল তুলে নিলে বা সরে গেলে টাইমার বাতিল হবে
                 const cancelPress = () => {
                     clearTimeout(pressTimer);
                 };
@@ -448,8 +627,6 @@
                 card.addEventListener('touchstart', startPress, {passive: true});
                 card.addEventListener('touchend', cancelPress);
                 card.addEventListener('touchmove', cancelPress);
-
-                // মাউসের জন্যও একই ব্যবস্থা (কম্পিউটার বা টেস্টের সুবিধার জন্য)
                 card.addEventListener('mousedown', startPress);
                 card.addEventListener('mouseup', cancelPress);
                 card.addEventListener('mouseleave', cancelPress);
@@ -471,10 +648,11 @@
             const noteIndex = notes.findIndex(n => n.id === id);
             if (noteIndex > -1) {
                 const removedNote = notes.splice(noteIndex, 1)[0];
+                removedNote.updatedAt = Date.now();
                 trashNotes.unshift(removedNote);
                 saveAll();
                 renderNotes();
-                alert(`"${title}" সফলভাবে ডিলিট করা হয়েছে।`);
+                alert(`"${title}" সফলভাবে ডিলিট করা হয়েছে।`);
             }
         }
 
@@ -498,7 +676,7 @@
                 const card = document.createElement('div');
                 card.className = "note-card";
                 card.style.borderColor = '#fca5a5';
-                
+
                 card.innerHTML = `
                     <div class="amount-tag" style="background-color: #ffe4e6; color: #9f1239; border-color: #fecdd3;">মোট: ৳${totalAmount}</div>
                     <div style="margin-bottom: 10px;">
@@ -507,7 +685,7 @@
                         <div class="note-date">${note.date}</div>
                     </div>
                     <div class="history-card-btns">
-                        <button onclick="restoreNote(${note.id})" class="restore-btn">🔄 ফিরিয়ে আনুন</button>
+                        <button onclick="restoreNote(${note.id})" class="restore-btn">🔄 ফিরিয়ে আনুন</button>
                         <button onclick="permanentDelete(${note.id})" class="perm-del-btn">🗑️ চিরতরে মুছুন</button>
                     </div>
                 `;
@@ -519,6 +697,7 @@
             const index = trashNotes.findIndex(n => n.id === id);
             if (index > -1) {
                 const restored = trashNotes.splice(index, 1)[0];
+                restored.updatedAt = Date.now();
                 notes.unshift(restored);
                 saveAll();
                 renderHistory();
@@ -526,7 +705,7 @@
         }
 
         function permanentDelete(id) {
-            if (confirm("এই হিসাবটি পাকাপাকিভাবে মুছে ফেলতে চান? এটি আর কখনোই ফিরিয়ে আনা যাবে না!")) {
+            if (confirm("এই হিসাবটি পাকাপাকিভাবে মুছে ফেলতে চান? এটি আর কখনোই ফিরিয়ে আনা যাবে না!")) {
                 trashNotes = trashNotes.filter(n => n.id !== id);
                 saveAll();
                 renderHistory();
@@ -554,7 +733,7 @@
             editorView.classList.add('hidden');
             historyView.classList.add('hidden');
             homeView.classList.remove('hidden');
-            document.getElementById('pageTitle').innerText = 'স্থায়ী খাতা';
+            document.getElementById('pageTitle').innerText = 'স্থায়ী খাতা';
             renderNotes();
         }
 
@@ -575,22 +754,13 @@
                 if (note) {
                     note.title = noteTitleInput.value.trim() || 'নামবিহীন পাতা';
                     note.content = currentText;
+                    note.updatedAt = Date.now();
                     document.getElementById('pageTitle').innerText = note.title;
                     saveAll();
-                    saveStatus.innerText = 'সেভ হয়েছে ✓';
+                    saveStatus.innerText = 'সেভ হয়েছে ✓';
                     setTimeout(() => { saveStatus.innerText = ''; }, 1500);
                 }
             }, 300);
-        }
-
-        renderNotes();
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('Service Worker Registered'))
-                    .catch(err => console.log('Service Worker Failed', err));
-            });
         }
     </script>
 </body>
